@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu Trường Kéo Co: Bảng Tuần Hoàn Hóa Học</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle at center, #0f294a 0%, #061326 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a192f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fbbf24;
+            border-radius: 4px;
+        }
+        /* Animations */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.9); }
+        }
+        .glow-yellow {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes tugShake {
+            0% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-2px) rotate(-1deg); }
+            50% { transform: translateY(1px) rotate(1deg); }
+            75% { transform: translateY(-1px) rotate(0deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .tug-active {
+            animation: tugShake 0.4s infinite;
+        }
+        .rope-pattern {
+            background: repeating-linear-gradient(
+                45deg,
+                #d97706,
+                #d97706 10px,
+                #fbbf24 10px,
+                #fbbf24 20px
+            );
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+        }
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .confetti {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            z-index: 999;
+            pointer-events: none;
+        }
+        /* Au Element Card */
+        .au-card {
+            background: #fef9c3;
+            border: 3px solid #ef4444;
+            color: #1d4ed8;
+            width: 130px;
+            padding: 8px;
+            border-radius: 8px;
+            margin: 0 auto 10px auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- TOP NAVIGATION & STATUS BAR -->
+    <header class="bg-blue-950/90 border-b-2 border-amber-400 px-4 py-2.5 sticky top-0 z-40 backdrop-blur-md shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-blue-950 font-black text-xl shadow-md border-2 border-white">
+                    <i class="fa-solid fa-atom fa-spin" style="--fa-animation-duration: 8s;"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-200 uppercase">
+                        Đấu Trường Kéo Co Hóa Học
+                    </h1>
+                    <p class="text-xs text-blue-200 font-medium">Chuyên đề: Cấu Tạo Bảng Tuần Hoàn (81 Câu Hỏi)</p>
+                </div>
+            </div>
+
+            <!-- Round Selector Pills -->
+            <div id="roundNav" class="hidden lg:flex items-center gap-1.5 bg-blue-900/80 p-1.5 rounded-xl border border-blue-700">
+                <button onclick="switchRound(1)" id="roundBtn1" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-blue-950 shadow">Vòng 1 (1-20)</button>
+                <button onclick="switchRound(2)" id="roundBtn2" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-200 hover:bg-blue-800">Vòng 2 (21-40)</button>
+                <button onclick="switchRound(3)" id="roundBtn3" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-200 hover:bg-blue-800">Vòng 3 (41-60)</button>
+                <button onclick="switchRound(4)" id="roundBtn4" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-200 hover:bg-blue-800">Vòng 4 (61-81)</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-2">
+                <button onclick="openQuestionBankModal()" class="px-3 py-2 rounded-xl bg-blue-800 hover:bg-blue-700 text-amber-300 border border-amber-400/40 text-xs font-bold flex items-center gap-1.5 transition" title="Xem danh sách 81 câu hỏi">
+                    <i class="fa-solid fa-list-check"></i> <span class="hidden sm:inline">81 Câu Hỏi</span>
+                </button>
+                <button onclick="toggleMusic()" id="musicBtn" class="w-10 h-10 rounded-xl bg-amber-400 hover:bg-amber-300 text-blue-950 font-bold flex items-center justify-center shadow transition" title="Bật/Tắt nhạc nền">
+                    <i class="fa-solid fa-volume-high" id="musicIcon"></i>
+                </button>
+                <button onclick="confirmEndGame()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-blue-950 font-extrabold text-xs flex items-center gap-1.5 shadow-md transition">
+                    <i class="fa-solid fa-trophy"></i> Tổng Kết
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow flex flex-col justify-center max-w-7xl w-full mx-auto px-3 py-3 md:px-6">
+
+        <!-- 1. WELCOME SCREEN -->
+        <section id="welcomeScreen" class="my-auto py-8">
+            <div class="max-w-4xl mx-auto bg-gradient-to-b from-blue-900/90 to-blue-950/95 rounded-3xl border-4 border-amber-400 shadow-2xl p-6 md:p-10 text-center relative overflow-hidden">
+                <!-- Decorative background elements -->
+                <div class="absolute -top-20 -left-20 w-60 h-60 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-20 -right-20 w-60 h-60 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/20 border border-amber-400 text-amber-300 text-sm font-bold mb-4">
+                    <i class="fa-solid fa-bolt"></i> TRÒ CHƠI TƯƠNG TÁC HỌC TẬP HÓA HỌC 10
+                </div>
+
+                <h2 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-3">
+                    ĐẤU TRƯỜNG <span class="text-amber-400 underline decoration-wavy decoration-blue-400">KÉO CO</span>
+                </h2>
+                <p class="text-blue-200 text-sm md:text-base max-w-2xl mx-auto mb-8">
+                    Chinh phục trọn bộ <strong>81 câu hỏi Cấu tạo Bảng Tuần Hoàn</strong> qua 4 vòng thi kịch tính. Hai đội thi đấu đối kháng trực tiếp trên 2 bảng câu hỏi độc lập. Trả lời đúng sẽ kéo dây về phía đội mình, trả lời sai sẽ bị hụt dây về phía đối phương!
+                </p>
+
+                <!-- 4 Rounds Info Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 text-left">
+                    <div class="bg-blue-950/80 p-3.5 rounded-2xl border-2 border-blue-700 hover:border-amber-400 transition">
+                        <div class="text-amber-400 font-black text-xs uppercase mb-1">Vòng 1 • Câu 1 - 20</div>
+                        <div class="font-bold text-white text-sm mb-1">Khởi Động Nguyên Tố</div>
+                        <div class="text-xs text-blue-300">Lực kéo: ±4% dây / câu</div>
+                    </div>
+                    <div class="bg-blue-950/80 p-3.5 rounded-2xl border-2 border-blue-700 hover:border-amber-400 transition">
+                        <div class="text-amber-400 font-black text-xs uppercase mb-1">Vòng 2 • Câu 21 - 40</div>
+                        <div class="font-bold text-white text-sm mb-1">Tăng Tốc Chu Kì</div>
+                        <div class="text-xs text-blue-300">Lực kéo: ±5% dây / câu</div>
+                    </div>
+                    <div class="bg-blue-950/80 p-3.5 rounded-2xl border-2 border-blue-700 hover:border-amber-400 transition">
+                        <div class="text-amber-400 font-black text-xs uppercase mb-1">Vòng 3 • Câu 41 - 60</div>
+                        <div class="font-bold text-white text-sm mb-1">Bứt Phá Cấu Hình</div>
+                        <div class="text-xs text-blue-300">Lực kéo: ±6% dây / câu</div>
+                    </div>
+                    <div class="bg-blue-950/80 p-3.5 rounded-2xl border-2 border-blue-700 hover:border-amber-400 transition">
+                        <div class="text-amber-400 font-black text-xs uppercase mb-1">Vòng 4 • Câu 61 - 81</div>
+                        <div class="font-bold text-white text-sm mb-1">Về Đích Vận Dụng</div>
+                        <div class="text-xs text-blue-300">Lực kéo: ±7% dây / câu</div>
+                    </div>
+                </div>
+
+                <!-- Team Name Setup -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-2xl mx-auto">
+                    <div class="bg-blue-900/60 p-4 rounded-2xl border-2 border-cyan-400">
+                        <label class="block text-xs font-extrabold uppercase text-cyan-300 mb-2">
+                            <i class="fa-solid fa-shield-halved mr-1"></i> Tên Đội Xanh (Bên Trái)
+                        </label>
+                        <input type="text" id="teamBlueInput" value="ĐỘI TIA CHỚP XANH" class="w-full px-4 py-2.5 rounded-xl bg-blue-950 border border-cyan-400/50 text-white font-bold text-center focus:outline-none focus:border-amber-400">
+                    </div>
+                    <div class="bg-blue-900/60 p-4 rounded-2xl border-2 border-amber-400">
+                        <label class="block text-xs font-extrabold uppercase text-amber-300 mb-2">
+                            <i class="fa-solid fa-fire-flame-curved mr-1"></i> Tên Đội Vàng (Bên Phải)
+                        </label>
+                        <input type="text" id="teamYellowInput" value="ĐỘI MẶT TRỜI VÀNG" class="w-full px-4 py-2.5 rounded-xl bg-blue-950 border border-amber-400/50 text-amber-300 font-bold text-center focus:outline-none focus:border-amber-400">
+                    </div>
+                </div>
+
+                <!-- Game Mode Option -->
+                <div class="flex flex-wrap items-center justify-center gap-4 mb-8">
+                    <div class="flex items-center gap-2 bg-blue-950/90 px-4 py-2 rounded-xl border border-blue-700">
+                        <span class="text-xs font-bold text-blue-200">Chế độ chơi:</span>
+                        <select id="playModeSelect" class="bg-blue-900 text-amber-300 font-bold text-xs px-3 py-1.5 rounded-lg border border-amber-400/40 focus:outline-none">
+                            <option value="simultaneous">2 Đội Trả Lời Song Song (Cùng lúc trên 2 bảng)</option>
+                            <option value="alternating">Luân Phiên Theo Lượt (Đội Xanh ➔ Đội Vàng)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="startGame()" class="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-blue-950 font-black text-xl tracking-wider uppercase shadow-xl glow-yellow transform hover:scale-105 transition flex items-center gap-3 mx-auto">
+                    <i class="fa-solid fa-play"></i> BẮT ĐẦU THI ĐẤU NGAY
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. MAIN GAMEPLAY ARENA -->
+        <section id="gameArena" class="hidden flex-col gap-3">
+            
+            <!-- Round Info Banner -->
+            <div class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-2xl p-3 border-2 border-amber-400 shadow-lg flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <span id="currentRoundBadge" class="px-3.5 py-1 rounded-xl bg-amber-400 text-blue-950 font-black text-sm uppercase shadow">
+                        VÒNG 1
+                    </span>
+                    <div>
+                        <h3 id="currentRoundTitle" class="font-extrabold text-amber-300 text-sm md:text-base uppercase">
+                            KHỞI ĐỘNG NGUYÊN TỐ (Câu 1 - 20)
+                        </h3>
+                        <p id="currentRoundDesc" class="text-xs text-blue-200">
+                            Trả lời đúng kéo dây +4% về phía đội mình • Trả lời sai bị hụt dây -3% về phía đối phương!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="text-xs font-bold bg-blue-950 px-3 py-1.5 rounded-xl border border-blue-700">
+                        Tiến độ vòng: <span id="roundProgressText" class="text-amber-400 font-black">0 / 20</span> câu
+                    </div>
+                    <button onclick="nextRoundPrompt()" id="nextRoundBtn" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs uppercase shadow transition flex items-center gap-1">
+                        Qua Vòng Tiếp <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TUG OF WAR VISUAL ARENA -->
+            <div class="bg-gradient-to-b from-blue-950 to-slate-900 rounded-3xl p-4 border-2 border-amber-400/80 shadow-2xl relative overflow-hidden">
+                
+                <!-- Score & Team Headers -->
+                <div class="flex justify-between items-center mb-2 relative z-10">
+                    <!-- Team Blue Stats -->
+                    <div class="flex items-center gap-3 bg-cyan-950/90 border-2 border-cyan-400 px-4 py-2 rounded-2xl shadow-md">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-400 text-blue-950 flex items-center justify-center font-black text-xl">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div id="teamBlueNameDisplay" class="font-black text-cyan-300 text-sm md:text-base uppercase tracking-wide">ĐỘI TIA CHỚP XANH</div>
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="text-white font-bold">Điểm: <strong id="scoreBlue" class="text-amber-300 text-sm">0</strong></span>
+                                <span class="text-cyan-200">Đúng: <strong id="correctBlue">0</strong>/<span id="totalBlue">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rope Position Status Indicator -->
+                    <div class="text-center hidden md:block">
+                        <div class="text-xs uppercase font-bold text-amber-300 tracking-widest mb-0.5">Vị Trí Dây Kéo Co</div>
+                        <div id="ropeStatusBanner" class="px-4 py-1 rounded-full bg-blue-900 border border-amber-400 text-xs font-extrabold text-white">
+                            CÂN BẰNG (50% - 50%)
+                        </div>
+                    </div>
+
+                    <!-- Team Yellow Stats -->
+                    <div class="flex items-center gap-3 bg-amber-950/90 border-2 border-amber-400 px-4 py-2 rounded-2xl shadow-md flex-row-reverse text-right">
+                        <div class="w-10 h-10 rounded-xl bg-amber-400 text-blue-950 flex items-center justify-center font-black text-xl">
+                            <i class="fa-solid fa-sun"></i>
+                        </div>
+                        <div>
+                            <div id="teamYellowNameDisplay" class="font-black text-amber-300 text-sm md:text-base uppercase tracking-wide">ĐỘI MẶT TRỜI VÀNG</div>
+                            <div class="flex items-center justify-end gap-3 text-xs">
+                                <span class="text-amber-200">Đúng: <strong id="correctYellow">0</strong>/<span id="totalYellow">0</span></span>
+                                <span class="text-white font-bold">Điểm: <strong id="scoreYellow" class="text-amber-300 text-sm">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TUG OF WAR TRACK -->
+                <div class="relative h-28 md:h-32 bg-gradient-to-r from-cyan-900/40 via-blue-900/60 to-amber-900/40 rounded-2xl border-2 border-blue-700 flex items-center overflow-hidden my-1">
+                    
+                    <!-- Left Win Zone -->
+                    <div class="absolute left-0 top-0 bottom-0 w-[15%] bg-cyan-500/20 border-r-2 border-dashed border-cyan-400 flex items-center justify-start pl-2 z-0">
+                        <span class="text-[10px] font-black text-cyan-300 uppercase rotate-0">Vạch Đích<br>Đội Xanh</span>
+                    </div>
+
+                    <!-- Center Line -->
+                    <div class="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-1 bg-white/60 z-0 flex flex-col items-center justify-between py-1">
+                        <span class="px-2 py-0.5 bg-blue-950 text-[10px] font-bold text-amber-300 rounded border border-amber-400">GIỮA SÂN</span>
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    </div>
+
+                    <!-- Right Win Zone -->
+                    <div class="absolute right-0 top-0 bottom-0 w-[15%] bg-amber-500/20 border-l-2 border-dashed border-amber-400 flex items-center justify-end pr-2 text-right z-0">
+                        <span class="text-[10px] font-black text-amber-300 uppercase">Vạch Đích<br>Đội Vàng</span>
+                    </div>
+
+                    <!-- Dynamic Moving Rope & Characters Assembly -->
+                    <div id="ropeAssembly" class="absolute top-1/2 -translate-y-1/2 w-full transition-all duration-500 ease-out z-10 flex items-center justify-center" style="left: 0%;">
+                        <!-- Giant Rope Line -->
+                        <div class="w-[140%] h-4 rope-pattern rounded-full relative flex items-center justify-center">
+                            
+                            <!-- Blue Team Pullers (Left of Center Flag) -->
+                            <div class="absolute right-[54%] flex items-center gap-1 md:gap-2 tug-active">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-9 h-9 md:w-11 md:h-11 rounded-full bg-cyan-400 border-2 border-white text-blue-950 flex items-center justify-center font-black text-lg shadow-lg">
+                                        <i class="fa-solid fa-user-astronaut"></i>
+                                    </div>
+                                    <span class="text-[10px] font-extrabold bg-cyan-900 text-cyan-200 px-1.5 rounded mt-0.5">Xanh 1</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-9 h-9 md:w-11 md:h-11 rounded-full bg-blue-500 border-2 border-white text-white flex items-center justify-center font-black text-lg shadow-lg">
+                                        <i class="fa-solid fa-person-running fa-flip-horizontal"></i>
+                                    </div>
+                                    <span class="text-[10px] font-extrabold bg-cyan-900 text-cyan-200 px-1.5 rounded mt-0.5">Xanh 2</span>
+                                </div>
+                            </div>
+
+                            <!-- Center Red/Gold Ribbon Marker -->
+                            <div class="relative flex flex-col items-center z-20">
+                                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-red-500 border-4 border-white shadow-2xl flex items-center justify-center text-blue-950 font-black text-base animate-bounce">
+                                    <i class="fa-solid fa-ribbon"></i>
+                                </div>
+                                <div class="w-3 h-6 bg-red-600 rounded-b-md border border-white -mt-1 shadow"></div>
+                            </div>
+
+                            <!-- Yellow Team Pullers (Right of Center Flag) -->
+                            <div class="absolute left-[54%] flex items-center gap-1 md:gap-2 tug-active">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-9 h-9 md:w-11 md:h-11 rounded-full bg-amber-400 border-2 border-white text-blue-950 flex items-center justify-center font-black text-lg shadow-lg">
+                                        <i class="fa-solid fa-person-running"></i>
+                                    </div>
+                                    <span class="text-[10px] font-extrabold bg-amber-900 text-amber-200 px-1.5 rounded mt-0.5">Vàng 1</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-9 h-9 md:w-11 md:h-11 rounded-full bg-yellow-300 border-2 border-white text-blue-950 flex items-center justify-center font-black text-lg shadow-lg">
+                                        <i class="fa-solid fa-user-ninja"></i>
+                                    </div>
+                                    <span class="text-[10px] font-extrabold bg-amber-900 text-amber-200 px-1.5 rounded mt-0.5">Vàng 2</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Percentage Tug Bar -->
+                <div class="w-full h-3.5 bg-blue-950 rounded-full overflow-hidden flex border border-blue-600 p-0.5 mt-2">
+                    <div id="bluePowerBar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-l-full transition-all duration-500" style="width: 50%"></div>
+                    <div id="yellowPowerBar" class="h-full bg-gradient-to-r from-amber-300 to-yellow-500 rounded-r-full transition-all duration-500" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <!-- TWO QUESTION BOARDS (SIDE BY SIDE) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                
+                <!-- BOARD 1: TEAM BLUE (XANH) -->
+                <div id="boardBlue" class="bg-gradient-to-b from-blue-900/95 to-blue-950 rounded-3xl border-2 border-cyan-400 shadow-xl p-4 md:p-5 flex flex-col justify-between relative transition-all">
+                    <!-- Turn Overlay when in Alternating Mode -->
+                    <div id="lockOverlayBlue" class="hidden absolute inset-0 bg-blue-950/80 backdrop-blur-xs rounded-3xl z-30 flex-col items-center justify-center p-6 text-center">
+                        <i class="fa-solid fa-hourglass-half text-4xl text-cyan-400 mb-3 animate-spin"></i>
+                        <h4 class="text-lg font-black text-white uppercase">Đang chờ lượt Đội Vàng trả lời...</h4>
+                        <p class="text-xs text-blue-200 mt-1">Hãy chuẩn bị sẵn sàng cho câu hỏi tiếp theo của đội bạn!</p>
+                    </div>
+
+                    <div>
+                        <!-- Board Header -->
+                        <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-lg bg-cyan-400 text-blue-950 font-black text-xs uppercase">
+                                    BẢNG ĐỘI XANH
+                                </span>
+                                <span id="qBadgeBlue" class="px-2.5 py-1 rounded-lg bg-blue-800 text-cyan-200 font-bold text-xs border border-cyan-400/40">
+                                    Câu #1
+                                </span>
+                            </div>
+                            <span id="streakBlue" class="text-xs font-extrabold text-amber-300">
+                                <i class="fa-solid fa-fire"></i> Chuỗi đúng: 0
+                            </span>
+                        </div>
+
+                        <!-- Question Content -->
+                        <div id="qContentBlue" class="min-h-[95px] flex flex-col justify-center mb-4">
+                            <div id="qVisualBlue"></div>
+                            <p id="qTextBlue" class="text-base md:text-lg font-bold text-white leading-snug">
+                                Đang tải câu hỏi...
+                            </p>
+                        </div>
+
+                        <!-- Options List -->
+                        <div id="optionsBlue" class="grid grid-cols-1 gap-2.5">
+                            <!-- Dynamically generated options -->
+                        </div>
+                    </div>
+
+                    <!-- Feedback Footer -->
+                    <div id="feedbackBlue" class="mt-4 min-h-[44px] rounded-xl bg-blue-950/90 border border-blue-800 px-3.5 py-2 flex items-center justify-between text-xs">
+                        <span class="text-blue-300"><i class="fa-solid fa-circle-info mr-1"></i> Chọn 1 đáp án đúng nhất để kéo dây về phía Đội Xanh!</span>
+                    </div>
+                </div>
+
+                <!-- BOARD 2: TEAM YELLOW (VÀNG) -->
+                <div id="boardYellow" class="bg-gradient-to-b from-blue-900/95 to-blue-950 rounded-3xl border-2 border-amber-400 shadow-xl p-4 md:p-5 flex flex-col justify-between relative transition-all">
+                    <!-- Turn Overlay when in Alternating Mode -->
+                    <div id="lockOverlayYellow" class="hidden absolute inset-0 bg-blue-950/80 backdrop-blur-xs rounded-3xl z-30 flex-col items-center justify-center p-6 text-center">
+                        <i class="fa-solid fa-hourglass-half text-4xl text-amber-400 mb-3 animate-spin"></i>
+                        <h4 class="text-lg font-black text-amber-300 uppercase">Đang chờ lượt Đội Xanh trả lời...</h4>
+                        <p class="text-xs text-blue-200 mt-1">Hãy chuẩn bị sẵn sàng cho câu hỏi tiếp theo của đội bạn!</p>
+                    </div>
+
+                    <div>
+                        <!-- Board Header -->
+                        <div class="flex items-center justify-between border-b border-amber-500/30 pb-3 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-lg bg-amber-400 text-blue-950 font-black text-xs uppercase">
+                                    BẢNG ĐỘI VÀNG
+                                </span>
+                                <span id="qBadgeYellow" class="px-2.5 py-1 rounded-lg bg-blue-800 text-amber-300 font-bold text-xs border border-amber-400/40">
+                                    Câu #2
+                                </span>
+                            </div>
+                            <span id="streakYellow" class="text-xs font-extrabold text-amber-300">
+                                <i class="fa-solid fa-fire"></i> Chuỗi đúng: 0
+                            </span>
+                        </div>
+
+                        <!-- Question Content -->
+                        <div id="qContentYellow" class="min-h-[95px] flex flex-col justify-center mb-4">
+                            <div id="qVisualYellow"></div>
+                            <p id="qTextYellow" class="text-base md:text-lg font-bold text-white leading-snug">
+                                Đang tải câu hỏi...
+                            </p>
+                        </div>
+
+                        <!-- Options List -->
+                        <div id="optionsYellow" class="grid grid-cols-1 gap-2.5">
+                            <!-- Dynamically generated options -->
+                        </div>
+                    </div>
+
+                    <!-- Feedback Footer -->
+                    <div id="feedbackYellow" class="mt-4 min-h-[44px] rounded-xl bg-blue-950/90 border border-blue-800 px-3.5 py-2 flex items-center justify-between text-xs">
+                        <span class="text-amber-200"><i class="fa-solid fa-circle-info mr-1"></i> Chọn 1 đáp án đúng nhất để kéo dây về phía Đội Vàng!</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 3. VICTORY & HONOR PODIUM SCREEN -->
+        <section id="victoryScreen" class="hidden my-auto py-6">
+            <div class="max-w-4xl mx-auto bg-gradient-to-b from-blue-900 via-blue-950 to-slate-950 rounded-3xl border-4 border-amber-400 shadow-2xl p-6 md:p-10 text-center relative overflow-hidden">
+                
+                <div class="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-amber-400 text-blue-950 font-black text-sm uppercase mb-4 shadow-md">
+                    <i class="fa-solid fa-crown"></i> BẢNG VÀNG VINH DANH CHUNG CUỘC
+                </div>
+
+                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-300 to-amber-200 mx-auto flex items-center justify-center text-blue-950 text-5xl md:text-6xl shadow-2xl border-4 border-white mb-4 glow-yellow">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <h2 id="winnerTitle" class="text-3xl md:text-5xl font-black text-amber-400 uppercase tracking-wide mb-2">
+                    ĐỘI CHIẾN THẮNG!
+                </h2>
+                <p id="winnerSubtitle" class="text-blue-200 text-sm md:text-base mb-8">
+                    Xuất sắc chinh phục đấu trường kéo co Bảng Tuần Hoàn Hóa Học!
+                </p>
+
+                <!-- Final Score Comparison Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+                    <!-- Blue Final Card -->
+                    <div id="finalCardBlue" class="bg-cyan-950/80 rounded-2xl p-5 border-2 border-cyan-400 shadow-lg">
+                        <div class="text-cyan-300 font-black text-lg uppercase mb-2" id="finalNameBlue">ĐỘI TIA CHỚP XANH</div>
+                        <div class="text-4xl font-black text-white mb-2"><span id="finalScoreBlue">0</span> <span class="text-base font-bold text-cyan-300">điểm</span></div>
+                        <div class="text-xs text-cyan-200 space-y-1">
+                            <div>Số câu trả lời đúng: <strong id="finalCorrectBlue" class="text-white">0</strong> câu</div>
+                            <div>Ưu thế kéo dây: <strong id="finalRopeBlue" class="text-amber-300">50%</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Yellow Final Card -->
+                    <div id="finalCardYellow" class="bg-amber-950/80 rounded-2xl p-5 border-2 border-amber-400 shadow-lg">
+                        <div class="text-amber-300 font-black text-lg uppercase mb-2" id="finalNameYellow">ĐỘI MẶT TRỜI VÀNG</div>
+                        <div class="text-4xl font-black text-white mb-2"><span id="finalScoreYellow">0</span> <span class="text-base font-bold text-amber-300">điểm</span></div>
+                        <div class="text-xs text-amber-200 space-y-1">
+                            <div>Số câu trả lời đúng: <strong id="finalCorrectYellow" class="text-white">0</strong> câu</div>
+                            <div>Ưu thế kéo dây: <strong id="finalRopeYellow" class="text-amber-300">50%</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="resetFullGame()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-blue-950 font-black text-base uppercase shadow-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Thi Đấu Lại Từ Đầu
+                    </button>
+                    <button onclick="openQuestionBankModal()" class="px-6 py-3.5 rounded-2xl bg-blue-800 hover:bg-blue-700 text-white border border-amber-400/50 font-bold text-base transition flex items-center gap-2">
+                        <i class="fa-solid fa-book-open"></i> Xem Đáp Án 81 Câu
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: ROUND TRANSITION CELEBRATION -->
+    <div id="roundModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-blue-900 to-blue-950 border-4 border-amber-400 rounded-3xl max-w-lg w-full p-6 md:p-8 text-center shadow-2xl">
+            <div class="w-16 h-16 rounded-2xl bg-amber-400 text-blue-950 font-black text-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fa-solid fa-flag-checkered"></i>
+            </div>
+            <h3 id="modalRoundTitle" class="text-2xl font-black text-amber-400 uppercase mb-2">HOÀN THÀNH VÒNG 1!</h3>
+            <p id="modalRoundDesc" class="text-blue-100 text-sm mb-6">
+                Hai đội đã hoàn thành xuất sắc các câu hỏi trong vòng này. Hãy sẵn sàng bước vào vòng tiếp theo với lực kéo mạnh hơn!
+            </p>
+            <div class="flex justify-center gap-3">
+                <button onclick="proceedToNextRound()" class="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-sm uppercase shadow-lg transition">
+                    Bước Vào Vòng Tiếp Theo <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: 81 QUESTIONS BANK & REVIEW -->
+    <div id="questionBankModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-blue-950 border-2 border-amber-400 rounded-3xl max-w-5xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 bg-blue-900 border-b border-amber-400/40 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-book-bookmark text-amber-400 text-xl"></i>
+                    <h3 class="font-black text-amber-300 text-base md:text-lg uppercase">Ngân Hàng 81 Câu Hỏi Cấu Tạo Bảng Tuần Hoàn</h3>
+                </div>
+                <button onclick="closeQuestionBankModal()" class="w-9 h-9 rounded-xl bg-blue-800 hover:bg-red-500 text-white font-bold flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="p-3 bg-blue-900/50 border-b border-blue-800 flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="filterBank(0)" class="px-3 py-1 rounded-lg bg-amber-400 text-blue-950 font-bold text-xs">Tất cả (81)</button>
+                    <button onclick="filterBank(1)" class="px-3 py-1 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-200 font-bold text-xs">Vòng 1 (Câu 1-20)</button>
+                    <button onclick="filterBank(2)" class="px-3 py-1 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-200 font-bold text-xs">Vòng 2 (Câu 21-40)</button>
+                    <button onclick="filterBank(3)" class="px-3 py-1 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-200 font-bold text-xs">Vòng 3 (Câu 41-60)</button>
+                    <button onclick="filterBank(4)" class="px-3 py-1 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-200 font-bold text-xs">Vòng 4 (Câu 61-81)</button>
+                </div>
+                <span class="text-xs text-amber-300 font-semibold">Đáp án đúng được tô màu Vàng nổi bật</span>
+            </div>
+
+            <div id="questionBankList" class="p-4 overflow-y-auto space-y-3 flex-grow">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-blue-950/80 border-t border-blue-800/80 py-2 px-4 text-center text-xs text-blue-300">
+        Đấu Trường Kéo Co Hóa Học • Thiết kế tương tác 2 Đội Xanh - Vàng • Trọn bộ 81 câu hỏi Cấu tạo Bảng Tuần Hoàn
+    </footer>
+
+    <script>
+        // =========================================================================
+        // TOÀN BỘ 81 CÂU HỎI TRẮC NGHIỆM TỪ FILE ĐÍNH KÈM
+        // =========================================================================
+        const ALL_QUESTIONS = [
+            // --- VÒNG 1: CÂU 1 -> 20 ---
+            {
+                id: 1,
+                q: "Bảng tuần hoàn hiện nay không áp dụng nguyên tắc sắp xếp nào sau đây?",
+                options: [
+                    "A. Mỗi nguyên tố hóa học được xếp vào một ô trong bảng tuần hoàn.",
+                    "B. Các nguyên tố được sắp xếp theo chiều tăng dần khối lượng nguyên tử.",
+                    "C. Các nguyên tố có cùng số lớp electron trên nguyên tử được xếp thành một hàng.",
+                    "D. Các nguyên tố có cùng số electron hóa trị trong nguyên tử được xếp thành một cột."
+                ],
+                ans: 1
+            },
+            {
+                id: 2,
+                q: "Số hiệu nguyên tử của nguyên tố hóa học bằng:",
+                options: [
+                    "A. số thứ tự của ô nguyên tố.",
+                    "B. số thứ tự của chu kì.",
+                    "C. số thứ tự của nhóm.",
+                    "D. số electron lớp ngoài cùng của nguyên tử."
+                ],
+                ans: 0
+            },
+            {
+                id: 3,
+                q: "Ô nguyên tố trong bảng tuần hoàn không cho biết thông tin nào sau đây?",
+                options: [
+                    "A. Kí hiệu nguyên tố.",
+                    "B. Tên nguyên tố.",
+                    "C. Số hiệu nguyên tử.",
+                    "D. Số khối của hạt nhân."
+                ],
+                ans: 3
+            },
+            {
+                id: 4,
+                q: "Trong bảng hệ thống tuần hoàn, chu kì là dãy các nguyên tố mà nguyên tử của chúng có:",
+                options: [
+                    "A. cùng số electron lớp vỏ ngoài cùng.",
+                    "B. cấu hình electron giống hệt nhau.",
+                    "C. cùng số lớp electron.",
+                    "D. cùng số proton."
+                ],
+                ans: 2
+            },
+            {
+                id: 5,
+                q: "Số chu kì trong bảng hệ thống tuần hoàn hiện nay là:",
+                options: ["A. 8.", "B. 18.", "C. 7.", "D. 16."],
+                ans: 2
+            },
+            {
+                id: 6,
+                q: "Trong bảng hệ thống tuần hoàn các nguyên tố hóa học, số chu kì nhỏ và chu kì lớn lần lượt là:",
+                options: ["A. 3 và 3.", "B. 4 và 3.", "C. 3 và 4.", "D. 4 và 4."],
+                ans: 2
+            },
+            {
+                id: 7,
+                q: "Chu kì 2 của bảng hệ thống tuần hoàn:",
+                options: [
+                    "A. bắt đầu từ nguyên tố có Z = 3 và kết thúc ở nguyên tố có Z = 11.",
+                    "B. bắt đầu từ nguyên tố có Z = 11 và kết thúc ở nguyên tố có Z = 18.",
+                    "C. bắt đầu từ nguyên tố có Z = 3 và kết thúc ở nguyên tố có Z = 18.",
+                    "D. bắt đầu từ nguyên tố có Z = 3 và kết thúc ở nguyên tố có Z = 10."
+                ],
+                ans: 3
+            },
+            {
+                id: 8,
+                q: "Ở tất cả các chu kì (trừ chu kì 1), nguyên tố đầu chu kì trong bảng tuần hoàn luôn là:",
+                options: ["A. kim loại kiềm thổ.", "B. kim loại kiềm.", "C. halogen.", "D. khí hiếm."],
+                ans: 1
+            },
+            {
+                id: 9,
+                q: "Chu kì 3 của bảng hệ thống tuần hoàn:",
+                options: [
+                    "A. bắt đầu từ nguyên tố có Z = 11 và kết thúc ở nguyên tố có Z = 18.",
+                    "B. bắt đầu từ nguyên tố có Z = 19 và kết thúc ở nguyên tố có Z = 36.",
+                    "C. bắt đầu từ nguyên tố có Z = 3 và kết thúc ở nguyên tố có Z = 10.",
+                    "D. bắt đầu từ nguyên tố có Z = 11 và kết thúc ở nguyên tố có Z = 19."
+                ],
+                ans: 0
+            },
+            {
+                id: 10,
+                q: "Chu kì 3 của bảng hệ thống tuần hoàn có:",
+                options: ["A. 2 nguyên tố.", "B. 8 nguyên tố.", "C. 10 nguyên tố.", "D. 18 nguyên tố."],
+                ans: 1
+            },
+            {
+                id: 11,
+                q: "Chu kì 4 của bảng hệ thống tuần hoàn có:",
+                options: ["A. 2 nguyên tố.", "B. 18 nguyên tố.", "C. 36 nguyên tố.", "D. 20 nguyên tố."],
+                ans: 1
+            },
+            {
+                id: 12,
+                q: "Số nguyên tố trong chu kì 3 và chu kì 5 lần lượt là:",
+                options: ["A. 8 và 18.", "B. 18 và 8.", "C. 8 và 8.", "D. 18 và 18."],
+                ans: 0
+            },
+            {
+                id: 13,
+                q: "Nguyên tố có cấu hình electron 1s²2s²2p⁶3s²3p⁶4s¹ thuộc chu kì:",
+                options: ["A. 15.", "B. 4.", "C. 19.", "D. 1."],
+                ans: 1
+            },
+            {
+                id: 14,
+                q: "Nguyên tố có cấu hình electron 1s²2s²2p⁶3s²3p⁶3d⁷4s² thuộc chu kì:",
+                options: ["A. 2.", "B. 4.", "C. 9.", "D. 27."],
+                ans: 1
+            },
+            {
+                id: 15,
+                q: "Nguyên tố có cấu hình electron [Ar]3d¹⁰4s² thuộc chu kì:",
+                options: ["A. 2.", "B. 12.", "C. 10.", "D. 4."],
+                ans: 3
+            },
+            {
+                id: 16,
+                q: "Cation X²⁺ có cấu hình electron 1s²2s²2p⁶3s²3p⁶. X thuộc chu kì:",
+                options: ["A. 3.", "B. 8.", "C. 2.", "D. 4."],
+                ans: 3
+            },
+            {
+                id: 17,
+                q: "Anion Y⁻ có cấu hình electron giống neon (Z = 10). Y thuộc chu kì:",
+                options: ["A. 1.", "B. 2.", "C. 3.", "D. 4."],
+                ans: 1
+            },
+            {
+                id: 18,
+                q: "Cation Z³⁺ có cấu hình electron 1s²2s²2p⁶3s²3p⁶3d⁵. Z thuộc chu kì:",
+                options: ["A. 3.", "B. 4.", "C. 5.", "D. 13."],
+                ans: 1
+            },
+            {
+                id: 19,
+                q: "Nhóm nguyên tố là:",
+                options: [
+                    "A. tập hợp các nguyên tố mà nguyên tử có cùng cấu hình electron giống nhau được xếp ở cùng một cột.",
+                    "B. tập hợp các nguyên tố mà nguyên tử có cấu hình electron gần giống nhau, do đó có tính chất hóa học giống nhau và được xếp thành một cột.",
+                    "C. tập hợp các nguyên tố mà nguyên tử có cấu hình electron tương tự nhau, do đó có tính chất hóa học gần giống nhau và được xếp cùng một cột.",
+                    "D. tập hợp các nguyên tố mà nguyên tử có tính chất hóa học giống nhau và được xếp cùng một cột."
+                ],
+                ans: 2
+            },
+            {
+                id: 20,
+                q: "Nguyên tử của các nguyên tố trong cùng một nhóm A (trừ He) có cùng:",
+                options: [
+                    "A. số electron.",
+                    "B. số lớp electron.",
+                    "C. số electron hóa trị.",
+                    "D. số phân lớp electron."
+                ],
+                ans: 2
+            },
+
+            // --- VÒNG 2: CÂU 21 -> 40 ---
+            {
+                id: 21,
+                q: "Số thứ tự của nhóm (trừ hai cột 9, 10 của nhóm VIIIB) bằng:",
+                options: [
+                    "A. số electron.",
+                    "B. số lớp electron.",
+                    "C. số electron hóa trị.",
+                    "D. số electron ở lớp ngoài cùng."
+                ],
+                ans: 2
+            },
+            {
+                id: 22,
+                q: "Nguyên tố Cl (Z = 17) thuộc nhóm VIIA, có số electron hóa trị là:",
+                options: ["A. 4.", "B. 5.", "C. 6.", "D. 7."],
+                ans: 3
+            },
+            {
+                id: 23,
+                q: "Nguyên tố nào sau đây thuộc nhóm A?",
+                options: [
+                    "A. [Ne]3s²3p³.",
+                    "B. [Ar]3d¹4s².",
+                    "C. [Ar]3d⁷4s².",
+                    "D. [Ar]3d⁵4s²."
+                ],
+                ans: 0
+            },
+            {
+                id: 24,
+                q: "Nguyên tố nào sau đây thuộc nhóm B?",
+                options: [
+                    "A. [Ar]3d³4s².",
+                    "B. [Ar]3d¹⁰4s²4p³.",
+                    "C. [Ar]3d¹⁰4s²4p⁵.",
+                    "D. [Ne]3s²3p⁵."
+                ],
+                ans: 0
+            },
+            {
+                id: 25,
+                q: "Nguyên tố nào sau đây thuộc nhóm B?",
+                options: [
+                    "A. [Ar]3d¹⁰4s²4p⁶.",
+                    "B. [Ar]4s².",
+                    "C. [Ne]3s²3p⁶.",
+                    "D. [Ar]3d⁸4s²."
+                ],
+                ans: 3
+            },
+            {
+                id: 26,
+                q: "Nguyên tử X có cấu hình electron 1s²2s²2p⁶3s²3p³. X thuộc nhóm:",
+                options: ["A. IIIA.", "B. IIIB.", "C. VA.", "D. VB."],
+                ans: 2
+            },
+            {
+                id: 27,
+                q: "Cấu hình electron lớp ngoài cùng của nguyên tử nguyên tố sodium là 3s¹. Nguyên tố sodium thuộc:",
+                options: [
+                    "A. chu kì 3 nhóm IA.",
+                    "B. chu kì 3 nhóm IIA.",
+                    "C. chu kì 2 nhóm IA.",
+                    "D. chu kì 2 nhóm IIA."
+                ],
+                ans: 0
+            },
+            {
+                id: 28,
+                q: "Nguyên tử Y có cấu hình electron 1s²2s²2p⁶3s²3p⁶3d⁵4s². Y thuộc nhóm:",
+                options: ["A. IIA.", "B. VIIA.", "C. IIB.", "D. VIIB."],
+                ans: 3
+            },
+            {
+                id: 29,
+                q: "Nguyên tử Z có cấu hình electron [Ar]3d⁸4s². Z thuộc:",
+                options: ["A. nhóm IIA.", "B. nhóm VIIIB.", "C. nhóm VIIIA.", "D. nhóm IIB."],
+                ans: 1
+            },
+            {
+                id: 30,
+                q: "Nguyên tử T có cấu hình electron [Ar]3d¹⁰4s²4p². T thuộc nhóm:",
+                options: ["A. IIA.", "B. VIIIB.", "C. IVB.", "D. IVA."],
+                ans: 3
+            },
+            {
+                id: 31,
+                q: "Nguyên tử iodine có cấu hình electron [Kr]4d¹⁰5s²5p⁵. Nguyên tố iodine thuộc nhóm:",
+                options: ["A. VIIA.", "B. VA.", "C. VIIB.", "D. VIIIB."],
+                ans: 0
+            },
+            {
+                id: 32,
+                q: "Nguyên tố nào sau đây thuộc khối nguyên tố d trong bảng tuần hoàn?",
+                options: [
+                    "A. Na (Z = 11).",
+                    "B. Al (Z = 13).",
+                    "C. Ca (Z = 20).",
+                    "D. Mn (Z = 25)."
+                ],
+                ans: 3
+            },
+            {
+                id: 33,
+                q: "Chọn phương án đúng: Mỗi nguyên tố hóa học được xếp vào một …(1)… trong bảng tuần hoàn. Mỗi hàng được gọi là một …(2)… Mỗi cột được gọi là một …(3)…",
+                options: [
+                    "A. (1) nhóm, (2) chu kì, (3) ô.",
+                    "B. (1) ô, (2) chu kì, (3) nhóm.",
+                    "C. (1) ô, (2) họ, (3) nhóm.",
+                    "D. (1) ô, (2) chu kì, (3) nhóm chính."
+                ],
+                ans: 1
+            },
+            {
+                id: 34,
+                q: "Trong bảng tuần hoàn do Mendeleev đề xuất, các nguyên tố sắp xếp theo chiều tăng dần của …(1)… Trong bảng tuần hoàn hiện đại, các nguyên tố sắp xếp theo chiều tăng dần của …(2)…",
+                options: [
+                    "A. (1) số electron hóa trị, (2) khối lượng nguyên tử.",
+                    "B. (1) số hiệu nguyên tử, (2) khối lượng nguyên tử.",
+                    "C. (1) khối lượng nguyên tử, (2) số hiệu nguyên tử.",
+                    "D. (1) số electron hóa trị, (2) số hiệu nguyên tử."
+                ],
+                ans: 2
+            },
+            {
+                id: 35,
+                hasAuCard: true,
+                q: "Hình trên mô tả ô nguyên tố của vàng (Gold) trong bảng tuần hoàn. Những thông tin thu được từ ô nguyên tố này là:",
+                options: [
+                    "A. Vàng có kí hiệu là Au, nguyên tử có 79 proton, nguyên tử khối trung bình là 196,97.",
+                    "B. Vàng và các hợp chất của vàng có kí hiệu là Au, số hiệu nguyên tử là 79, nguyên tử khối trung bình là 196,97.",
+                    "C. Vàng và các hợp chất của vàng có kí hiệu là Au, số hiệu nguyên tử là 79, có hai đồng vị 196 và 197.",
+                    "D. Vàng có kí hiệu là Au, số hiệu nguyên tử là 79, có hai đồng vị với số khối là 196 và 197."
+                ],
+                ans: 0
+            },
+            {
+                id: 36,
+                q: "Bảng tuần hoàn hiện nay có số chu kì và số hàng ngang (tính cả 2 hàng họ Lantan và Actini ở cuối bảng) lần lượt là:",
+                options: ["A. 7 và 9.", "B. 7 và 8.", "C. 7 và 7.", "D. 6 và 7."],
+                ans: 0
+            },
+            {
+                id: 37,
+                q: "Bảng tuần hoàn hiện nay có số cột, số nhóm A và số nhóm B lần lượt là:",
+                options: [
+                    "A. 18, 8, 8.",
+                    "B. 18, 8, 10.",
+                    "C. 18, 10, 8.",
+                    "D. 16, 8, 8."
+                ],
+                ans: 0
+            },
+            {
+                id: 38,
+                q: "Trong bảng tuần hoàn các nguyên tố hóa học, các nguyên tố khí hiếm thuộc nhóm:",
+                options: ["A. IA.", "B. IIA.", "C. VIIIA.", "D. VIIA."],
+                ans: 2
+            },
+            {
+                id: 39,
+                q: "Hai nguyên tố đứng cùng trong một chu kì trong bảng tuần hoàn do chúng có cùng đặc điểm nào sau đây?",
+                options: [
+                    "A. Số electron ở lớp ngoài cùng.",
+                    "B. Số electron ở phân lớp ngoài cùng.",
+                    "C. Số electron độc thân.",
+                    "D. Số lớp electron."
+                ],
+                ans: 3
+            },
+            {
+                id: 40,
+                q: "Cho biết số thứ tự của Mg trong bảng tuần hoàn là 12. Vị trí của Mg trong bảng tuần hoàn là:",
+                options: [
+                    "A. chu kì 3, nhóm IIA.",
+                    "B. chu kì 2, nhóm IIB.",
+                    "C. chu kì 3, nhóm IIIA.",
+                    "D. chu kì 3, nhóm IIIB."
+                ],
+                ans: 0
+            },
+
+            // --- VÒNG 3: CÂU 41 -> 60 ---
+            {
+                id: 41,
+                q: "Nguyên tố Al có Z = 13, vị trí của Al trong bảng tuần hoàn là:",
+                options: [
+                    "A. chu kì 2, nhóm VIB.",
+                    "B. chu kì 3, nhóm IIIA.",
+                    "C. chu kì 2, nhóm IIA.",
+                    "D. chu kì 3, nhóm IIB."
+                ],
+                ans: 1
+            },
+            {
+                id: 42,
+                q: "Vị trí của nguyên tố có Z = 15 trong bảng tuần hoàn là:",
+                options: [
+                    "A. Chu kì 4, nhóm VIB.",
+                    "B. Chu kì 3, nhóm VA.",
+                    "C. Chu kì 4, nhóm IIA.",
+                    "D. Chu kì 3, nhóm IIB."
+                ],
+                ans: 1
+            },
+            {
+                id: 43,
+                q: "Nguyên tử X có cấu hình electron 1s²2s²2p². Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 6, chu kì 3, nhóm VIA.",
+                    "B. số thứ tự 6, chu kì 2, nhóm IVA.",
+                    "C. số thứ tự 8, chu kì 2, nhóm IIA.",
+                    "D. số thứ tự 6, chu kì 3, nhóm IVA."
+                ],
+                ans: 1
+            },
+            {
+                id: 44,
+                q: "Nguyên tử X có cấu hình electron [Ne]3s²3p¹. Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 3, chu kì 3, nhóm IIIA.",
+                    "B. số thứ tự 11, chu kì 3, nhóm IIIA.",
+                    "C. số thứ tự 13, chu kì 2, nhóm IA.",
+                    "D. số thứ tự 13, chu kì 3, nhóm IIIA."
+                ],
+                ans: 3
+            },
+            {
+                id: 45,
+                q: "Nguyên tử X có cấu hình electron [Ne]3s²3p⁵. Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 17, chu kì 3, nhóm VA.",
+                    "B. số thứ tự 15, chu kì 3, nhóm VIIA.",
+                    "C. số thứ tự 17, chu kì 3, nhóm VIIA.",
+                    "D. số thứ tự 15, chu kì 4, nhóm VA."
+                ],
+                ans: 2
+            },
+            {
+                id: 46,
+                q: "Nguyên tử X có cấu hình electron [Ar]4s². Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 20, chu kì 4, nhóm IIA.",
+                    "B. số thứ tự 20, chu kì 2, nhóm IVA.",
+                    "C. số thứ tự 22, chu kì 4, nhóm IIA.",
+                    "D. số thứ tự 22, chu kì 3, nhóm IIA."
+                ],
+                ans: 0
+            },
+            {
+                id: 47,
+                q: "Nguyên tử X có cấu hình electron [Ar]3d¹4s². Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 23, chu kì 4, nhóm IIIA.",
+                    "B. số thứ tự 21, chu kì 4, nhóm IIIB.",
+                    "C. số thứ tự 21, chu kì 4, nhóm IA.",
+                    "D. số thứ tự 23, chu kì 3, nhóm IIIA."
+                ],
+                ans: 1
+            },
+            {
+                id: 48,
+                q: "Nguyên tử X có cấu hình electron [Ar]3d⁵4s². Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 25, chu kì 4, nhóm VIIA.",
+                    "B. số thứ tự 27, chu kì 4, nhóm VIIB.",
+                    "C. số thứ tự 25, chu kì 4, nhóm VIIB.",
+                    "D. số thứ tự 27, chu kì 4, nhóm IIA."
+                ],
+                ans: 2
+            },
+            {
+                id: 49,
+                q: "Nguyên tử X có cấu hình electron [Ar]3d⁸4s². Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 30, chu kì 4, nhóm IIA.",
+                    "B. số thứ tự 28, chu kì 4, nhóm VIIIA.",
+                    "C. số thứ tự 28, chu kì 4, nhóm VIIIB.",
+                    "D. số thứ tự 30, chu kì 4, nhóm VIIIB."
+                ],
+                ans: 2
+            },
+            {
+                id: 50,
+                q: "Nguyên tử X có cấu hình electron [Ar]3d¹⁰4s²4p¹. Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 31, chu kì 4, nhóm IIIB.",
+                    "B. số thứ tự 31, chu kì 4, nhóm VIIIB.",
+                    "C. số thứ tự 31, chu kì 4, nhóm IIIA.",
+                    "D. số thứ tự 33, chu kì 4, nhóm IIIA."
+                ],
+                ans: 2
+            },
+            {
+                id: 51,
+                q: "Nguyên tử X có cấu hình electron [Ar]3d¹⁰4s²4p⁵. Vị trí của X trong bảng hệ thống tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 35, chu kì 4, nhóm VIIA.",
+                    "B. số thứ tự 35, chu kì 4, nhóm IIA.",
+                    "C. số thứ tự 35, chu kì 4, nhóm VIIIB.",
+                    "D. số thứ tự 35, chu kì 4, nhóm VIIB."
+                ],
+                ans: 0
+            },
+            {
+                id: 52,
+                q: "Hạt nhân nguyên tử Y có 15 proton. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 15, chu kì 3, nhóm VIIA.",
+                    "B. số thứ tự 15, chu kì 2, nhóm VA.",
+                    "C. số thứ tự 15, chu kì 3, nhóm VA.",
+                    "D. số thứ tự 15, chu kì 4, nhóm VA."
+                ],
+                ans: 2
+            },
+            {
+                id: 53,
+                q: "Số hiệu nguyên tử của nguyên tố Y là 19. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 19, chu kì 3, nhóm VIIA.",
+                    "B. số thứ tự 19, chu kì 4, nhóm IA.",
+                    "C. số thứ tự 19, chu kì 4, nhóm IIA.",
+                    "D. số thứ tự 19, chu kì 3, nhóm IA."
+                ],
+                ans: 1
+            },
+            {
+                id: 54,
+                q: "Nguyên tố Y có số hiệu là 21. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 21, chu kì 4, nhóm IIIA.",
+                    "B. số thứ tự 21, chu kì 4, nhóm IA.",
+                    "C. số thứ tự 21, chu kì 4, nhóm IIIB.",
+                    "D. số thứ tự 21, chu kì 3, nhóm IB."
+                ],
+                ans: 2
+            },
+            {
+                id: 55,
+                q: "Nguyên tố Y có số hiệu là 25. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 25, chu kì 4, nhóm VIIIB.",
+                    "B. số thứ tự 25, chu kì 4, nhóm VIIA.",
+                    "C. số thứ tự 25, chu kì 4, nhóm VB.",
+                    "D. số thứ tự 25, chu kì 4, nhóm VIIB."
+                ],
+                ans: 3
+            },
+            {
+                id: 56,
+                q: "Nguyên tố Y có số hiệu nguyên tử là 33. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 33, chu kì 4, nhóm VA.",
+                    "B. số thứ tự 33, chu kì 4, nhóm VB.",
+                    "C. số thứ tự 33, chu kì 5, nhóm VB.",
+                    "D. số thứ tự 33, chu kì 5, nhóm VA."
+                ],
+                ans: 0
+            },
+            {
+                id: 57,
+                q: "Nguyên tố Y có số hiệu nguyên tử là 35. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 35, chu kì 4, nhóm VIIB.",
+                    "B. số thứ tự 35, chu kì 5, nhóm VIIA.",
+                    "C. số thứ tự 35, chu kì 5, nhóm VIIB.",
+                    "D. số thứ tự 35, chu kì 4, nhóm VIIA."
+                ],
+                ans: 3
+            },
+            {
+                id: 58,
+                q: "Sulfur dạng kem bôi được dùng điều trị mụn trứng cá. Nguyên tử sulfur có phân lớp ngoài cùng là 3p⁴. Phát biểu nào sau đây là SAI khi nói về nguyên tử sulfur?",
+                options: [
+                    "A. Lớp ngoài cùng của sulfur có 6 electron.",
+                    "B. Hạt nhân nguyên tử sulfur có 16 electron.",
+                    "C. Trong bảng tuần hoàn sulfur nằm ở chu kì 3.",
+                    "D. Sulfur nằm ở nhóm VIA."
+                ],
+                ans: 1
+            },
+            {
+                id: 59,
+                q: "Nguyên tử của nguyên tố A và B có phân mức năng lượng cao nhất lần lượt là 3d⁶ và 3p². Trong bảng HTTH, vị trí của A và B lần lượt là:",
+                options: [
+                    "A. chu kì 4, nhóm VIA và chu kì 3, nhóm IVA.",
+                    "B. chu kì 4, nhóm VIB và chu kì 3, nhóm IIIA.",
+                    "C. chu kì 3, nhóm VIB và chu kì 3, nhóm IVA.",
+                    "D. chu kì 4, nhóm VIIIB và chu kì 3, nhóm IVA."
+                ],
+                ans: 3
+            },
+            {
+                id: 60,
+                q: "Nguyên tử của nguyên tố X có tổng số hạt p, n, e là 52. Trong hạt nhân X có số hạt không mang điện nhiều hơn số hạt mang điện là 1. Vị trí của X trong bảng tuần hoàn là:",
+                options: [
+                    "A. chu kì 3, nhóm VA.",
+                    "B. chu kì 3, nhóm VIIA.",
+                    "C. chu kì 2, nhóm VIIA.",
+                    "D. chu kì 2, nhóm VA."
+                ],
+                ans: 1
+            },
+
+            // --- VÒNG 4: CÂU 61 -> 81 ---
+            {
+                id: 61,
+                q: "Nguyên tử nguyên tố Z có tổng số hạt p, n, e là 21. Trong đó, số hạt mang điện nhiều hơn số hạt không mang điện là 7. Vị trí của Z trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 14, chu kì 3, nhóm IVA.",
+                    "B. số thứ tự 7, chu kì 2, nhóm VA.",
+                    "C. số thứ tự 14, chu kì 2, nhóm IVA.",
+                    "D. số thứ tự 7, chu kì 2, nhóm VIIA."
+                ],
+                ans: 1
+            },
+            {
+                id: 62,
+                q: "Nguyên tử X có tổng số hạt (e, p, n) là 60. Trong hạt nhân, số hạt mang điện bằng số hạt không mang điện. Vị trí của X trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 15, chu kì 3, nhóm VA.",
+                    "B. số thứ tự 30, chu kì 4, nhóm VIIIA.",
+                    "C. số thứ tự 30, chu kì 4, nhóm VIIIB.",
+                    "D. số thứ tự 20, chu kì 4, nhóm IIA."
+                ],
+                ans: 3
+            },
+            {
+                id: 63,
+                q: "Nguyên tử Y có tổng số hạt mang điện trong nguyên tử là 34. Số hạt mang điện nhiều hơn số hạt không mang điện 10 hạt. Vị trí của Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 17, chu kì 3, nhóm VIIA.",
+                    "B. số thứ tự 11, chu kì 3, nhóm IA.",
+                    "C. số thứ tự 11, chu kì 2, nhóm VIIA.",
+                    "D. số thứ tự 17, chu kì 3, nhóm IA."
+                ],
+                ans: 0
+            },
+            {
+                id: 64,
+                q: "Nguyên tử X có tổng số hạt p, n, e là 82. Số hạt mang điện nhiều hơn số hạt không mang điện là 22. Trong bảng tuần hoàn, nguyên tố X thuộc nhóm:",
+                options: ["A. IIA.", "B. IIB.", "C. VIB.", "D. VIIIB."],
+                ans: 3
+            },
+            {
+                id: 65,
+                q: "Silicon được dùng chế tạo vật liệu bán dẫn, nguyên tử silicon có phân lớp electron ngoài cùng là 3p². Phát biểu nào sau đây KHÔNG đúng?",
+                options: [
+                    "A. Hạt nhân nguyên tử silicon có 14 hạt proton.",
+                    "B. Trong bảng tuần hoàn, silicon nằm ở chu kì 3.",
+                    "C. Số electron độc thân trong nguyên tử silicon bằng 0.",
+                    "D. Silicon thuộc khối nguyên tố p."
+                ],
+                ans: 2
+            },
+            {
+                id: 66,
+                q: "Cho cấu hình electron các nguyên tố: Na: [Ne]3s¹, Cr: [Ar]3d⁵4s¹, Br: [Ar]3d¹⁰4s²4p⁵, F: 1s²2s²2p⁵, Cu: [Ar]3d¹⁰4s¹. Số nguyên tố thuộc khối s, p, d lần lượt là:",
+                options: [
+                    "A. 2, 1, 2.",
+                    "B. 1, 2, 2.",
+                    "C. 1, 1, 3.",
+                    "D. 2, 2, 1."
+                ],
+                ans: 1
+            },
+            {
+                id: 67,
+                q: "Cho biết cấu hình electron của ion Y²⁺ là [Ar]3d⁶. Cấu hình electron của nguyên tử Y là:",
+                options: [
+                    "A. [Ar]3d⁸.",
+                    "B. [Ar]3d⁶4s².",
+                    "C. [Ar]3d⁷4s¹.",
+                    "D. [Ar]3d⁶4s¹4p¹."
+                ],
+                ans: 1
+            },
+            {
+                id: 68,
+                q: "Cho biết cấu hình electron của ion Y²⁺ là [Ar]3d⁶. Vị trí của nguyên tố Y trong bảng tuần hoàn là:",
+                options: [
+                    "A. số thứ tự 26, chu kì 4, nhóm VIIIB.",
+                    "B. số thứ tự 24, chu kì 4, nhóm VIB.",
+                    "C. số thứ tự 28, chu kì 4, nhóm VIIIB.",
+                    "D. số thứ tự 26, chu kì 4, nhóm IIA."
+                ],
+                ans: 0
+            },
+            {
+                id: 69,
+                q: "Cation R⁺ có cấu hình electron 1s²2s²2p⁶3s²3p⁶. Vị trí của nguyên tố R trong bảng tuần hoàn là:",
+                options: [
+                    "A. chu kì 4, nhóm IA.",
+                    "B. chu kì 3, nhóm VIIA.",
+                    "C. chu kì 3, nhóm VIIIA.",
+                    "D. chu kì 4, nhóm IIA."
+                ],
+                ans: 0
+            },
+            {
+                id: 70,
+                q: "Cấu hình electron của ion X²⁺ là 1s²2s²2p⁶3s²3p⁶3d⁶. Trong bảng tuần hoàn các nguyên tố hóa học, nguyên tố X thuộc:",
+                options: [
+                    "A. chu kì 4, nhóm VIIIA.",
+                    "B. chu kì 4, nhóm IIA.",
+                    "C. chu kì 3, nhóm VIB.",
+                    "D. chu kì 4, nhóm VIIIB."
+                ],
+                ans: 3
+            },
+            {
+                id: 71,
+                q: "Nguyên tử nguyên tố X có tổng số electron trong các phân lớp p là 7. Cấu hình electron và số hiệu nguyên tử của X là:",
+                options: [
+                    "A. 1s²2s²2p⁶3s²3p¹ và Z = 13.",
+                    "B. 1s²2s²2p⁶3s¹ và Z = 11.",
+                    "C. 1s²2s²2p⁶3s²3p⁶4s¹ và Z = 19.",
+                    "D. 1s²2s²2p⁵ và Z = 9."
+                ],
+                ans: 0
+            },
+            {
+                id: 72,
+                q: "Nguyên tử X có tổng số e trong các phân lớp p là 7 (Z_X = 13). Số hạt mang điện của nguyên tử Y nhiều hơn số hạt mang điện của nguyên tử X là 8 hạt. Số hiệu nguyên tử của Y là:",
+                options: [
+                    "A. Z = 15.",
+                    "B. Z = 17.",
+                    "C. Z = 21.",
+                    "D. Z = 11."
+                ],
+                ans: 1
+            },
+            {
+                id: 73,
+                q: "Nguyên tử X có tổng số e phân lớp p là 7; số hạt mang điện của Y nhiều hơn X là 8 hạt. Hai nguyên tố X và Y lần lượt là:",
+                options: [
+                    "A. Fe và Cl.",
+                    "B. N và P.",
+                    "C. Al và Cl.",
+                    "D. N và Na."
+                ],
+                ans: 2
+            },
+            {
+                id: 74,
+                q: "Trong hợp chất ion XY (X là kim loại, Y là phi kim), số electron của cation X⁺ bằng số electron của anion Y⁻ và tổng số electron trong XY là 20. Công thức của XY là:",
+                options: ["A. AlN.", "B. MgO.", "C. LiF.", "D. NaF."],
+                ans: 3
+            },
+            {
+                id: 75,
+                q: "Một ion M³⁺ có tổng số hạt p, n, e là 73; biết trong ion M³⁺ có số hạt mang điện nhiều hơn số hạt không mang điện là 17. Vị trí của M trong bảng tuần hoàn là:",
+                options: [
+                    "A. chu kì 4, nhóm VIIIB.",
+                    "B. chu kì 4, nhóm VIB.",
+                    "C. chu kì 3, nhóm IIIA.",
+                    "D. chu kì 3, nhóm VIA."
+                ],
+                ans: 0
+            },
+            {
+                id: 76,
+                q: "Ion X²⁺ có tổng số hạt cơ bản là 58, trong nguyên tử X có số hạt mang điện nhiều hơn số hạt không mang điện là 20. Vị trí của X trong bảng tuần hoàn là:",
+                options: [
+                    "A. Ô số 20, chu kì 4, nhóm IIIA.",
+                    "B. Ô số 20, chu kì 4, nhóm IIA.",
+                    "C. Ô số 19, chu kì 4, nhóm IA.",
+                    "D. Ô số 20, chu kì 3, nhóm IIA."
+                ],
+                ans: 1
+            },
+            {
+                id: 77,
+                q: "Ion M²⁺ có tổng số hạt p, e, n là 80. Biết trong ion M²⁺ có số hạt mang điện nhiều hơn số hạt không mang điện là 20. Trong bảng tuần hoàn M thuộc:",
+                options: [
+                    "A. Chu kì 4, nhóm VIIIB.",
+                    "B. Chu kì 4, nhóm VIIIA.",
+                    "C. Chu kì 3, nhóm VIIIB.",
+                    "D. Chu kì 4, nhóm IIA."
+                ],
+                ans: 0
+            },
+            {
+                id: 78,
+                q: "Hợp chất ion A tạo từ M²⁺ và X²⁻ có tổng số hạt là 84. Trong hạt nhân M và X có tổng số n bằng tổng số p. Số khối của X lớn hơn của M là 8. Số hiệu nguyên tử của M và X lần lượt là:",
+                options: [
+                    "A. 12 và 16.",
+                    "B. 18 và 10.",
+                    "C. 12 và 18.",
+                    "D. 16 và 12."
+                ],
+                ans: 0
+            },
+            {
+                id: 79,
+                q: "(Từ dữ kiện câu 78 với Z_M = 12, Z_X = 16) Vị trí của M và X trong bảng tuần hoàn lần lượt là:",
+                options: [
+                    "A. M thuộc ô 16, chu kì 3, nhóm VIA; X thuộc ô 12, chu kì 3, nhóm IIA.",
+                    "B. M thuộc ô 18, chu kì 3, nhóm VIIIA; X thuộc ô 10, chu kì 2, nhóm VIIIA.",
+                    "C. M thuộc ô 12, chu kì 3, nhóm IIA; X thuộc ô 16, chu kì 3, nhóm VIA.",
+                    "D. M thuộc ô 10, chu kì 2, nhóm VIIIA; X thuộc ô 16, chu kì 3, nhóm VIA."
+                ],
+                ans: 2
+            },
+            {
+                id: 80,
+                q: "(Từ dữ kiện câu 78 với M là Mg và X là S) Công thức của hợp chất ion A là:",
+                options: ["A. MgS.", "B. FeS.", "C. NaCl.", "D. NaF."],
+                ans: 0
+            },
+            {
+                id: 81,
+                q: "Cấu hình e của F là 1s²2s²2p⁵, của Cl là 1s²2s²2p⁶3s²3p⁵. Cho các phát biểu: (a) F và Cl cùng 1 nhóm; (b) Cùng số e lớp ngoài cùng; (c) Khác số e lớp ngoài cùng; (d) Cùng 1 chu kì; (e) Số thứ tự Cl lớn hơn F; (g) Cl nhóm B, F nhóm A. Số phát biểu đúng là:",
+                options: ["A. 2.", "B. 4.", "C. 3.", "D. 5."],
+                ans: 2
+            }
+        ];
+
+        // =========================================================================
+        // CẤU HÌNH 4 VÒNG THI
+        // =========================================================================
+        const ROUNDS_CONFIG = {
+            1: {
+                round: 1,
+                name: "VÒNG 1: KHỞI ĐỘNG NGUYÊN TỐ",
+                rangeText: "Câu 1 - 20",
+                startIdx: 0,
+                endIdx: 20, // slice(0, 20) -> 20 câu
+                pullWin: 4.5, // % kéo về đội mình khi trả lời đúng
+                pullLose: 3.0, // % bị hụt về đối phương khi trả lời sai
+                points: 10
+            },
+            2: {
+                round: 2,
+                name: "VÒNG 2: TĂNG TỐC CHU KÌ",
+                rangeText: "Câu 21 - 40",
+                startIdx: 20,
+                endIdx: 40, // slice(20, 40) -> 20 câu
+                pullWin: 5.5,
+                pullLose: 3.5,
+                points: 15
+            },
+            3: {
+                round: 3,
+                name: "VÒNG 3: BỨT PHÁ CẤU HÌNH",
+                rangeText: "Câu 41 - 60",
+                startIdx: 40,
+                endIdx: 60, // slice(40, 60) -> 20 câu
+                pullWin: 6.5,
+                pullLose: 4.5,
+                points: 20
+            },
+            4: {
+                round: 4,
+                name: "VÒNG 4: VỀ ĐÍCH VẬN DỤNG",
+                rangeText: "Câu 61 - 81",
+                startIdx: 60,
+                endIdx: 81, // slice(60, 81) -> 21 câu
+                pullWin: 8.0,
+                pullLose: 5.5,
+                points: 30
+            }
+        };
+
+        // =========================================================================
+        // TRẠNG THÁI TRÒ CHƠI (GAME STATE)
+        // =========================================================================
+        let gameState = {
+            currentRound: 1,
+            playMode: 'simultaneous', // 'simultaneous' hoặc 'alternating'
+            activeTurn: 'blue', // Dùng khi ở chế độ alternating
+            ropePosition: 0, // -100 (Đội Xanh thắng tuyệt đối) đến +100 (Đội Vàng thắng tuyệt đối), 0 là cân bằng
+            teamBlue: {
+                name: "ĐỘI TIA CHỚP XANH",
+                score: 0,
+                correct: 0,
+                totalAnswered: 0,
+                streak: 0,
+                questions: [],
+                qIndex: 0,
+                finishedRound: false
+            },
+            teamYellow: {
+                name: "ĐỘI MẶT TRỜI VÀNG",
+                score: 0,
+                correct: 0,
+                totalAnswered: 0,
+                streak: 0,
+                questions: [],
+                qIndex: 0,
+                finishedRound: false
+            }
+        };
+
+        // =========================================================================
+        // HỆ THỐNG ÂM THANH TONE.JS (NHẠC NỀN SÔI ĐỘNG & HIỆU ỨNG)
+        // =========================================================================
+        let isMusicPlaying = false;
+        let bgmLoop = null;
+        let synthBgm = null;
+        let sfxSynth = null;
+
+        async function initAudio() {
+            await Tone.start();
+            if (!sfxSynth) {
+                sfxSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.01, decay: 0.15, sustain: 0.1, release: 0.4 }
+                }).toDestination();
+                sfxSynth.volume.value = -4;
+            }
+            if (!synthBgm) {
+                synthBgm = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.02, decay: 0.2, sustain: 0.2, release: 0.3 }
+                }).toDestination();
+                synthBgm.volume.value = -14;
+
+                const melody = [
+                    "C4", "E4", "G4", "C5", "A4", "G4", "E4", "G4",
+                    "F4", "A4", "C5", "D5", "B4", "G4", "A4", "B4"
+                ];
+                let step = 0;
+                bgmLoop = new Tone.Loop((time) => {
+                    if (isMusicPlaying) {
+                        const note = melody[step % melody.length];
+                        synthBgm.triggerAttackRelease(note, "8n", time);
+                        step++;
+                    }
+                }, "8n");
+                Tone.Transport.bpm.value = 135;
+                Tone.Transport.start();
+                bgmLoop.start(0);
+            }
+        }
+
+        function playSound(type) {
+            try {
+                if (!sfxSynth) return;
+                const now = Tone.now();
+                if (type === 'correct') {
+                    sfxSynth.triggerAttackRelease(["C5", "E5", "G5"], "16n", now);
+                    sfxSynth.triggerAttackRelease(["G5", "C6"], "8n", now + 0.12);
+                } else if (type === 'wrong') {
+                    sfxSynth.triggerAttackRelease(["F3", "B2"], "8n", now);
+                    sfxSynth.triggerAttackRelease(["E3", "Bb2"], "4n", now + 0.15);
+                } else if (type === 'roundUp') {
+                    sfxSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+                    sfxSynth.triggerAttackRelease(["D4", "F#4", "A4", "D5"], "8n", now + 0.18);
+                    sfxSynth.triggerAttackRelease(["G4", "B4", "D5", "G5"], "4n", now + 0.36);
+                } else if (type === 'victory') {
+                    sfxSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+                    sfxSynth.triggerAttackRelease(["E4", "G4", "C5", "E5"], "8n", now + 0.2);
+                    sfxSynth.triggerAttackRelease(["G4", "C5", "E5", "G5"], "2n", now + 0.4);
+                }
+            } catch (e) {
+                // Ignore audio context issues before user interaction
+            }
+        }
+
+        async function toggleMusic() {
+            await initAudio();
+            isMusicPlaying = !isMusicPlaying;
+            const icon = document.getElementById('musicIcon');
+            const btn = document.getElementById('musicBtn');
+            if (isMusicPlaying) {
+                icon.className = "fa-solid fa-volume-high";
+                btn.classList.add("bg-amber-400", "text-blue-950");
+                btn.classList.remove("bg-blue-800", "text-blue-300");
+            } else {
+                icon.className = "fa-solid fa-volume-xmark";
+                btn.classList.remove("bg-amber-400", "text-blue-950");
+                btn.classList.add("bg-blue-800", "text-blue-300");
+            }
+        }
+
+        // =========================================================================
+        // KHỞI TẠO & ĐIỀU KHIỂN VÒNG THI
+        // =========================================================================
+        async function startGame() {
+            await initAudio();
+            isMusicPlaying = true;
+            document.getElementById('musicIcon').className = "fa-solid fa-volume-high";
+
+            const blueName = document.getElementById('teamBlueInput').value.trim() || "ĐỘI TIA CHỚP XANH";
+            const yellowName = document.getElementById('teamYellowInput').value.trim() || "ĐỘI MẶT TRỜI VÀNG";
+            const mode = document.getElementById('playModeSelect').value;
+
+            gameState.teamBlue.name = blueName;
+            gameState.teamYellow.name = yellowName;
+            gameState.playMode = mode;
+            gameState.ropePosition = 0;
+
+            document.getElementById('teamBlueNameDisplay').textContent = blueName;
+            document.getElementById('teamYellowNameDisplay').textContent = yellowName;
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('gameArena').classList.remove('hidden');
+            document.getElementById('gameArena').classList.add('flex');
+            document.getElementById('roundNav').classList.remove('hidden');
+
+            loadRound(1);
+            playSound('roundUp');
+        }
+
+        function loadRound(roundNumber) {
+            gameState.currentRound = roundNumber;
+            const cfg = ROUNDS_CONFIG[roundNumber];
+
+            // Cập nhật thanh chọn vòng trên Header
+            for (let r = 1; r <= 4; r++) {
+                const btn = document.getElementById(`roundBtn${r}`);
+                if (r === roundNumber) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-blue-950 shadow";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-200 hover:bg-blue-800";
+                }
+            }
+
+            // Cập nhật Banner vòng thi
+            document.getElementById('currentRoundBadge').textContent = `VÒNG ${roundNumber} / 4`;
+            document.getElementById('currentRoundTitle').textContent = `${cfg.name} (${cfg.rangeText})`;
+            document.getElementById('currentRoundDesc').textContent =
+                `Mỗi câu trả lời ĐÚNG cộng +${cfg.points} điểm và kéo dây +${cfg.pullWin}% • Trả lời SAI bị kéo hụt dây -${cfg.pullLose}%!`;
+
+            // Chia câu hỏi của vòng thành 2 bảng cho 2 đội (Câu lẻ cho Đội Xanh, câu chẵn cho Đội Vàng)
+            const roundQuestions = ALL_QUESTIONS.slice(cfg.startIdx, cfg.endIdx);
+            const blueQs = [];
+            const yellowQs = [];
+
+            roundQuestions.forEach((q, idx) => {
+                if (idx % 2 === 0) {
+                    blueQs.push(q);
+                } else {
+                    yellowQs.push(q);
+                }
+            });
+
+            // Ở vòng 4 có 21 câu (Blue 11 câu, Yellow 10 câu), thêm 1 câu cuối để cả 2 đội có số lượt cân bằng (11 lượt)
+            if (yellowQs.length < blueQs.length) {
+                yellowQs.push(roundQuestions[roundQuestions.length - 1]);
+            }
+
+            gameState.teamBlue.questions = blueQs;
+            gameState.teamBlue.qIndex = 0;
+            gameState.teamBlue.finishedRound = false;
+
+            gameState.teamYellow.questions = yellowQs;
+            gameState.teamYellow.qIndex = 0;
+            gameState.teamYellow.finishedRound = false;
+
+            gameState.activeTurn = 'blue';
+
+            updateRoundProgressUI();
+            updateTurnLocksUI();
+            renderTeamQuestion('blue');
+            renderTeamQuestion('yellow');
+            updateRopeVisual();
+        }
+
+        function switchRound(roundNum) {
+            loadRound(roundNum);
+            playSound('roundUp');
+        }
+
+        function updateTurnLocksUI() {
+            const lockBlue = document.getElementById('lockOverlayBlue');
+            const lockYellow = document.getElementById('lockOverlayYellow');
+
+            if (gameState.playMode === 'simultaneous') {
+                lockBlue.classList.add('hidden');
+                lockYellow.classList.add('hidden');
+                return;
+            }
+
+            // Nếu chế độ luân phiên (alternating)
+            if (gameState.teamBlue.finishedRound && gameState.teamYellow.finishedRound) {
+                lockBlue.classList.add('hidden');
+                lockYellow.classList.add('hidden');
+                return;
+            }
+
+            if (gameState.activeTurn === 'blue' && !gameState.teamBlue.finishedRound) {
+                lockBlue.classList.add('hidden');
+                lockYellow.classList.remove('hidden');
+                lockYellow.classList.add('flex');
+            } else if (gameState.activeTurn === 'yellow' && !gameState.teamYellow.finishedRound) {
+                lockYellow.classList.add('hidden');
+                lockBlue.classList.remove('hidden');
+                lockBlue.classList.add('flex');
+            } else if (gameState.teamBlue.finishedRound) {
+                lockBlue.classList.add('hidden');
+                lockYellow.classList.add('hidden');
+            } else {
+                lockBlue.classList.add('hidden');
+                lockYellow.classList.add('hidden');
+            }
+        }
+
+        // =========================================================================
+        // HIỂN THỊ CÂU HỎI LÊN 2 BẢNG ĐỘI XANH & ĐỘI VÀNG
+        // =========================================================================
+        function renderTeamQuestion(team) {
+            const isBlue = team === 'blue';
+            const teamObj = isBlue ? gameState.teamBlue : gameState.teamYellow;
+            const suffix = isBlue ? 'Blue' : 'Yellow';
+
+            const qBadge = document.getElementById(`qBadge${suffix}`);
+            const qVisual = document.getElementById(`qVisual${suffix}`);
+            const qText = document.getElementById(`qText${suffix}`);
+            const optionsContainer = document.getElementById(`options${suffix}`);
+            const feedbackBox = document.getElementById(`feedback${suffix}`);
+
+            // Kiểm tra nếu đội đã hoàn thành hết câu hỏi của vòng hiện tại
+            if (teamObj.qIndex >= teamObj.questions.length) {
+                teamObj.finishedRound = true;
+                qBadge.textContent = "Hoàn thành vòng";
+                qVisual.innerHTML = "";
+                qText.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-circle-check mr-2"></i>${teamObj.name} đã hoàn thành tất cả câu hỏi của Vòng ${gameState.currentRound}!</span>`;
+                optionsContainer.innerHTML = `
+                    <div class="p-6 rounded-2xl bg-blue-950/60 border border-amber-400/30 text-center text-blue-200 text-sm">
+                        Đang đợi đội bạn hoàn thành hoặc bấm <strong>"Qua Vòng Tiếp"</strong> ở thanh trên để sang vòng mới!
+                    </div>
+                `;
+                checkBothTeamsFinishedRound();
+                return;
+            }
+
+            const currentQ = teamObj.questions[teamObj.qIndex];
+            qBadge.textContent = `Câu ${currentQ.id} (${teamObj.qIndex + 1}/${teamObj.questions.length})`;
+
+            // Nếu là câu 35 có thẻ nguyên tố Au
+            if (currentQ.hasAuCard) {
+                qVisual.innerHTML = `
+                    <div class="au-card text-center">
+                        <div class="text-left font-black text-base text-blue-700 bg-yellow-200 inline-block px-1.5 rounded">79</div>
+                        <div class="text-3xl font-black text-red-600 leading-none my-0.5">Au</div>
+                        <div class="text-xs font-bold text-blue-700">Gold</div>
+                        <div class="text-xs font-extrabold text-blue-800">196,97</div>
+                    </div>
+                `;
+            } else {
+                qVisual.innerHTML = "";
+            }
+
+            qText.textContent = `Câu ${currentQ.id}: ${currentQ.q}`;
+
+            // Render 4 phương án A, B, C, D
+            optionsContainer.innerHTML = "";
+            currentQ.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                const borderTheme = isBlue
+                    ? "border-cyan-500/40 hover:border-cyan-300 hover:bg-cyan-900/50"
+                    : "border-amber-500/40 hover:border-amber-300 hover:bg-amber-900/40";
+
+                btn.className = `option-btn w-full text-left px-4 py-3 rounded-2xl bg-blue-950/90 border-2 ${borderTheme} text-white font-semibold text-sm md:text-base flex items-center justify-between gap-2 shadow`;
+                btn.innerHTML = `
+                    <span>${optText}</span>
+                    <i class="fa-regular fa-circle text-xs opacity-50"></i>
+                `;
+                btn.onclick = () => handleSelectAnswer(team, idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            feedbackBox.innerHTML = isBlue
+                ? `<span class="text-cyan-200"><i class="fa-solid fa-bolt mr-1 text-cyan-400"></i> Lượt trả lời câu #${currentQ.id} của <strong>${teamObj.name}</strong></span>`
+                : `<span class="text-amber-200"><i class="fa-solid fa-sun mr-1 text-amber-400"></i> Lượt trả lời câu #${currentQ.id} của <strong>${teamObj.name}</strong></span>`;
+        }
+
+        // =========================================================================
+        // XỬ LÝ KHI ĐỘI CHỌN ĐÁP ÁN & KÉO DÂY
+        // =========================================================================
+        function handleSelectAnswer(team, selectedIdx, clickedBtn) {
+            const isBlue = team === 'blue';
+            const teamObj = isBlue ? gameState.teamBlue : gameState.teamYellow;
+            const suffix = isBlue ? 'Blue' : 'Yellow';
+            const cfg = ROUNDS_CONFIG[gameState.currentRound];
+            const currentQ = teamObj.questions[teamObj.qIndex];
+
+            const optionsContainer = document.getElementById(`options${suffix}`);
+            const allButtons = optionsContainer.querySelectorAll('button');
+            allButtons.forEach(b => b.disabled = true);
+
+            const isCorrect = selectedIdx === currentQ.ans;
+            teamObj.totalAnswered++;
+
+            const feedbackBox = document.getElementById(`feedback${suffix}`);
+
+            if (isCorrect) {
+                playSound('correct');
+                teamObj.correct++;
+                teamObj.streak++;
+                const bonus = teamObj.streak >= 3 ? 5 : 0;
+                teamObj.score += (cfg.points + bonus);
+
+                // Kéo dây về phía đội trả lời đúng (Xanh là âm, Vàng là dương)
+                if (isBlue) {
+                    gameState.ropePosition = Math.max(-100, gameState.ropePosition - cfg.pullWin);
+                } else {
+                    gameState.ropePosition = Math.min(100, gameState.ropePosition + cfg.pullWin);
+                }
+
+                clickedBtn.className = "w-full text-left px-4 py-3 rounded-2xl bg-emerald-600 border-2 border-emerald-300 text-white font-extrabold text-sm md:text-base flex items-center justify-between gap-2 shadow-lg";
+                clickedBtn.innerHTML = `<span>${currentQ.options[selectedIdx]}</span> <i class="fa-solid fa-circle-check text-lg"></i>`;
+
+                feedbackBox.innerHTML = `
+                    <span class="text-emerald-300 font-bold">
+                        <i class="fa-solid fa-check-double mr-1"></i> CHÍNH XÁC! +${cfg.points + bonus} điểm • Kéo dây +${cfg.pullWin}% về phía đội mình!
+                    </span>
+                `;
+            } else {
+                playSound('wrong');
+                teamObj.streak = 0;
+
+                // Trả lời sai: dây bị kéo hụt về phía đối phương
+                if (isBlue) {
+                    gameState.ropePosition = Math.min(100, gameState.ropePosition + cfg.pullLose);
+                } else {
+                    gameState.ropePosition = Math.max(-100, gameState.ropePosition - cfg.pullLose);
+                }
+
+                clickedBtn.className = "w-full text-left px-4 py-3 rounded-2xl bg-rose-700 border-2 border-rose-300 text-white font-bold text-sm md:text-base flex items-center justify-between gap-2";
+                clickedBtn.innerHTML = `<span>${currentQ.options[selectedIdx]}</span> <i class="fa-solid fa-circle-xmark text-lg"></i>`;
+
+                // Highlight đáp án đúng
+                const correctBtn = allButtons[currentQ.ans];
+                if (correctBtn) {
+                    correctBtn.className = "w-full text-left px-4 py-3 rounded-2xl bg-amber-400 border-2 border-white text-blue-950 font-black text-sm md:text-base flex items-center justify-between gap-2 shadow-lg";
+                    correctBtn.innerHTML = `<span>${currentQ.options[currentQ.ans]}</span> <i class="fa-solid fa-star text-blue-950"></i>`;
+                }
+
+                feedbackBox.innerHTML = `
+                    <span class="text-rose-300 font-bold">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> SAI RỒI! Dây bị hụt -${cfg.pullLose}% về phía đối phương!
+                    </span>
+                `;
+            }
+
+            // Cập nhật điểm số & giao diện dây kéo co
+            updateScoreAndStatsUI();
+            updateRopeVisual();
+
+            // Chuyển sang câu tiếp theo sau 1.2 giây
+            setTimeout(() => {
+                teamObj.qIndex++;
+                updateRoundProgressUI();
+
+                // Đổi lượt nếu ở chế độ Luân phiên
+                if (gameState.playMode === 'alternating') {
+                    if (isBlue && !gameState.teamYellow.finishedRound) {
+                        gameState.activeTurn = 'yellow';
+                    } else if (!isBlue && !gameState.teamBlue.finishedRound) {
+                        gameState.activeTurn = 'blue';
+                    }
+                    updateTurnLocksUI();
+                }
+
+                renderTeamQuestion(team);
+            }, 1250);
+        }
+
+        function updateScoreAndStatsUI() {
+            document.getElementById('scoreBlue').textContent = gameState.teamBlue.score;
+            document.getElementById('correctBlue').textContent = gameState.teamBlue.correct;
+            document.getElementById('totalBlue').textContent = gameState.teamBlue.totalAnswered;
+            document.getElementById('streakBlue').innerHTML = `<i class="fa-solid fa-fire"></i> Chuỗi đúng: ${gameState.teamBlue.streak}`;
+
+            document.getElementById('scoreYellow').textContent = gameState.teamYellow.score;
+            document.getElementById('correctYellow').textContent = gameState.teamYellow.correct;
+            document.getElementById('totalYellow').textContent = gameState.teamYellow.totalAnswered;
+            document.getElementById('streakYellow').innerHTML = `<i class="fa-solid fa-fire"></i> Chuỗi đúng: ${gameState.teamYellow.streak}`;
+        }
+
+        function updateRoundProgressUI() {
+            const answeredInRound = gameState.teamBlue.qIndex + gameState.teamYellow.qIndex;
+            const totalInRound = gameState.teamBlue.questions.length + gameState.teamYellow.questions.length;
+            document.getElementById('roundProgressText').textContent = `${answeredInRound} / ${totalInRound}`;
+        }
+
+        function updateRopeVisual() {
+            // ropePosition từ -100 (Xanh) đến +100 (Vàng)
+            // Dịch chuyển phần tử ropeAssembly trong khoảng -34% đến +34% để hiển thị đẹp mắt trong khung
+            const clampedPos = Math.max(-100, Math.min(100, gameState.ropePosition));
+            const visualOffsetPercent = (clampedPos / 100) * 34;
+
+            const ropeEl = document.getElementById('ropeAssembly');
+            ropeEl.style.left = `${visualOffsetPercent}%`;
+
+            // Tính phần trăm ưu thế của mỗi đội
+            const blueAdvantage = Math.round(50 - clampedPos / 2);
+            const yellowAdvantage = 100 - blueAdvantage;
+
+            document.getElementById('bluePowerBar').style.width = `${blueAdvantage}%`;
+            document.getElementById('yellowPowerBar').style.width = `${yellowAdvantage}%`;
+
+            const statusBanner = document.getElementById('ropeStatusBanner');
+            if (Math.abs(clampedPos) < 3) {
+                statusBanner.textContent = `CÂN BẰNG (50% - 50%)`;
+                statusBanner.className = "px-4 py-1 rounded-full bg-blue-900 border border-amber-400 text-xs font-extrabold text-white";
+            } else if (clampedPos < 0) {
+                statusBanner.textContent = `${gameState.teamBlue.name} ĐANG CHIẾM ƯU THẾ (${blueAdvantage}% - ${yellowAdvantage}%)`;
+                statusBanner.className = "px-4 py-1 rounded-full bg-cyan-500 text-blue-950 border border-white text-xs font-black shadow";
+            } else {
+                statusBanner.textContent = `${gameState.teamYellow.name} ĐANG CHIẾM ƯU THẾ (${yellowAdvantage}% - ${blueAdvantage}%)`;
+                statusBanner.className = "px-4 py-1 rounded-full bg-amber-400 text-blue-950 border border-white text-xs font-black shadow";
+            }
+        }
+
+        function checkBothTeamsFinishedRound() {
+            if (gameState.teamBlue.finishedRound && gameState.teamYellow.finishedRound) {
+                playSound('roundUp');
+                if (gameState.currentRound < 4) {
+                    const modal = document.getElementById('roundModal');
+                    document.getElementById('modalRoundTitle').textContent = `HOÀN THÀNH VÒNG ${gameState.currentRound}!`;
+                    const nextCfg = ROUNDS_CONFIG[gameState.currentRound + 1];
+                    document.getElementById('modalRoundDesc').innerHTML =
+                        `Hai đội đã hoàn thành tất cả câu hỏi của Vòng ${gameState.currentRound}.<br><br>Chuẩn bị bước vào <strong>${nextCfg.name} (${nextCfg.rangeText})</strong> với mức điểm <strong>+${nextCfg.points} điểm/câu</strong>!`;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                } else {
+                    // Hoàn thành cả 4 vòng (81 câu) -> Vinh danh
+                    showVictoryScreen();
+                }
+            }
+        }
+
+        function nextRoundPrompt() {
+            if (gameState.currentRound < 4) {
+                loadRound(gameState.currentRound + 1);
+                playSound('roundUp');
+            } else {
+                showVictoryScreen();
+            }
+        }
+
+        function proceedToNextRound() {
+            const modal = document.getElementById('roundModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (gameState.currentRound < 4) {
+                loadRound(gameState.currentRound + 1);
+                playSound('roundUp');
+            } else {
+                showVictoryScreen();
+            }
+        }
+
+        function confirmEndGame() {
+            showVictoryScreen();
+        }
+
+        // =========================================================================
+        // MÀN HÌNH VINH DANH ĐỘI THẮNG CUỘC & PHÁO GIẤY
+        // =========================================================================
+        function showVictoryScreen() {
+            playSound('victory');
+            document.getElementById('gameArena').classList.add('hidden');
+            document.getElementById('gameArena').classList.remove('flex');
+            document.getElementById('victoryScreen').classList.remove('hidden');
+
+            const clampedPos = Math.max(-100, Math.min(100, gameState.ropePosition));
+            const blueAdv = Math.round(50 - clampedPos / 2);
+            const yellowAdv = 100 - blueAdv;
+
+            document.getElementById('finalNameBlue').textContent = gameState.teamBlue.name;
+            document.getElementById('finalScoreBlue').textContent = gameState.teamBlue.score;
+            document.getElementById('finalCorrectBlue').textContent = `${gameState.teamBlue.correct}/${gameState.teamBlue.totalAnswered}`;
+            document.getElementById('finalRopeBlue').textContent = `${blueAdv}%`;
+
+            document.getElementById('finalNameYellow').textContent = gameState.teamYellow.name;
+            document.getElementById('finalScoreYellow').textContent = gameState.teamYellow.score;
+            document.getElementById('finalCorrectYellow').textContent = `${gameState.teamYellow.correct}/${gameState.teamYellow.totalAnswered}`;
+            document.getElementById('finalRopeYellow').textContent = `${yellowAdv}%`;
+
+            const winnerTitle = document.getElementById('winnerTitle');
+            const winnerSubtitle = document.getElementById('winnerSubtitle');
+
+            // Xác định đội thắng dựa trên vị trí dây kéo co (hoặc tổng điểm nếu dây cân bằng)
+            if (blueAdv > yellowAdv || (blueAdv === yellowAdv && gameState.teamBlue.score > gameState.teamYellow.score)) {
+                winnerTitle.textContent = `🏆 QUÁN QUÂN: ${gameState.teamBlue.name}!`;
+                winnerTitle.className = "text-3xl md:text-5xl font-black text-cyan-300 uppercase tracking-wide mb-2";
+                winnerSubtitle.textContent = `Chiến thắng áp đảo với ưu thế kéo dây ${blueAdv}% và ${gameState.teamBlue.score} điểm!`;
+            } else if (yellowAdv > blueAdv || (blueAdv === yellowAdv && gameState.teamYellow.score > gameState.teamBlue.score)) {
+                winnerTitle.textContent = `🏆 QUÁN QUÂN: ${gameState.teamYellow.name}!`;
+                winnerTitle.className = "text-3xl md:text-5xl font-black text-amber-400 uppercase tracking-wide mb-2";
+                winnerSubtitle.textContent = `Chiến thắng áp đảo với ưu thế kéo dây ${yellowAdv}% và ${gameState.teamYellow.score} điểm!`;
+            } else {
+                winnerTitle.textContent = `🤝 HAI ĐỘI ĐỒNG QUÁN QUÂN!`;
+                winnerTitle.className = "text-3xl md:text-5xl font-black text-amber-300 uppercase tracking-wide mb-2";
+                winnerSubtitle.textContent = `Một trận đấu ngang tài ngang sức tuyệt vời giữa ${gameState.teamBlue.name} và ${gameState.teamYellow.name}!`;
+            }
+
+            launchConfetti();
+        }
+
+        function resetFullGame() {
+            gameState.teamBlue.score = 0;
+            gameState.teamBlue.correct = 0;
+            gameState.teamBlue.totalAnswered = 0;
+            gameState.teamBlue.streak = 0;
+
+            gameState.teamYellow.score = 0;
+            gameState.teamYellow.correct = 0;
+            gameState.teamYellow.totalAnswered = 0;
+            gameState.teamYellow.streak = 0;
+
+            gameState.ropePosition = 0;
+            updateScoreAndStatsUI();
+
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+        }
+
+        function launchConfetti() {
+            const colors = ['#fbbf24', '#38bdf8', '#fde047', '#0284c7', '#ffffff'];
+            for (let i = 0; i < 70; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-20px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                conf.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(conf);
+
+                const duration = 2000 + Math.random() * 2500;
+                conf.animate([
+                    { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate(${(Math.random() - 0.5) * 200}px, 100vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: duration,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+
+                setTimeout(() => conf.remove(), duration);
+            }
+        }
+
+        // =========================================================================
+        // MODAL NGÂN HÀNG 81 CÂU HỎI & ĐÁP ÁN
+        // =========================================================================
+        function openQuestionBankModal() {
+            const modal = document.getElementById('questionBankModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            filterBank(0);
+        }
+
+        function closeQuestionBankModal() {
+            const modal = document.getElementById('questionBankModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function filterBank(roundFilter) {
+            const listEl = document.getElementById('questionBankList');
+            listEl.innerHTML = "";
+
+            let filtered = ALL_QUESTIONS;
+            if (roundFilter > 0) {
+                const cfg = ROUNDS_CONFIG[roundFilter];
+                filtered = ALL_QUESTIONS.slice(cfg.startIdx, cfg.endIdx);
+            }
+
+            filtered.forEach(item => {
+                const roundOfQ = item.id <= 20 ? 1 : item.id <= 40 ? 2 : item.id <= 60 ? 3 : 4;
+                const card = document.createElement('div');
+                card.className = "p-4 rounded-2xl bg-blue-900/70 border border-blue-700 text-left";
+
+                const optsHtml = item.options.map((opt, idx) => {
+                    const isAns = idx === item.ans;
+                    return `
+                        <div class="px-3 py-1.5 rounded-lg text-xs md:text-sm ${isAns ? 'bg-amber-400 text-blue-950 font-black shadow' : 'bg-blue-950/70 text-blue-200'}">
+                            ${opt} ${isAns ? '<i class="fa-solid fa-check ml-1"></i>' : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="px-2.5 py-0.5 rounded bg-amber-400/20 border border-amber-400 text-amber-300 font-black text-xs">
+                            Câu ${item.id} • Vòng ${roundOfQ}
+                        </span>
+                    </div>
+                    <p class="font-bold text-white text-sm md:text-base mb-3">${item.q}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        ${optsHtml}
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
